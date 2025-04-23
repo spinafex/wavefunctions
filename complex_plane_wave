@@ -1,0 +1,24 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Parameters
+k = 2.0  # Wave number
+x = np.linspace(0, 4*np.pi, 1000)  # Spatial coordinate
+
+# Wavefunction: psi(x) = e^(ikx)
+psi = np.exp(1j * k * x)
+
+# Real and imaginary parts
+real_part = np.real(psi)
+imag_part = np.imag(psi)
+
+# Plot
+plt.figure(figsize=(8, 4))
+plt.plot(x, real_part, label='Real part: cos(kx)', color='blue')
+plt.plot(x, imag_part, label='Imaginary part: sin(kx)', color='red')
+plt.title('Complex Plane Wave: $e^{i k x}$')
+plt.xlabel('x')
+plt.ylabel('Amplitude')
+plt.legend()
+plt.grid(True)
+plt.show()
