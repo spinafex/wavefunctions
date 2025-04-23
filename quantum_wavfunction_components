@@ -1,0 +1,76 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from IPython.display import HTML
+
+# Parameters
+k = 2.0  # Wave number (same for quantum and EM wave)
+omega = 1.0  # Angular frequency
+A = 1.0  # Amplitude for wavefunction
+E0 = 1.0  # Amplitude for electric field
+c = 1.0  # Speed of light (normalized for simplicity, so B0 = E0/c)
+x = np.linspace(0, 4*np.pi, 1000)  # Spatial coordinate (x for quantum, z for EM)
+
+# Set up figure with two subplots
+fig = plt.figure(figsize=(12, 5))
+
+# Left subplot: Real and imaginary parts of wavefunction
+ax1 = plt.subplot(121)
+line_real, = ax1.plot([], [], label='Real(ψ): cos(kx - ωt)', color='blue')
+line_imag, = ax1.plot([], [], label='Imag(ψ): sin(kx - ωt)', color='red')
+ax1.set_xlim(0, 4*np.pi)
+ax1.set_ylim(-1.5*A, 1.5*A)
+ax1.set_xlabel('x')
+ax1.set_ylabel('ψ components')
+ax1.set_title('Quantum Wavefunction Components')
+ax1.legend()
+ax1.grid(True)
+
+# Right subplot: Magnitudes of E and B for EM wave
+ax2 = plt.subplot(122)
+line_E, = ax2.plot([], [], label='|E|: E₀ cos(kz - ωt)', color='blue')
+line_B, = ax2.plot([], [], label='|B|: (E₀/c) cos(kz - ωt)', color='red')
+ax2.set_xlim(0, 4*np.pi)
+ax2.set_ylim(-1.5*E0, 1.5*E0)
+ax2.set_xlabel('z')
+ax2.set_ylabel('Field magnitudes')
+ax2.set_title('EM Wave Field Magnitudes')
+ax2.legend()
+ax2.grid(True)
+
+# Initialization function
+def init():
+    line_real.set_data([], [])
+    line_imag.set_data([], [])
+    line_E.set_data([], [])
+    line_B.set_data([], [])
+    return line_real, line_imag, line_E, line_B
+
+# Animation function
+def animate(t):
+    # Quantum wavefunction: ψ(x, t) = A e^{i(kx - ωt)}
+    psi = A * np.exp(1j * (k * x - omega * t))
+    real_psi = np.real(psi)
+    imag_psi = np.imag(psi)
+    
+    # EM wave: E = E₀ cos(kz - ωt) \hat{x}, B = (E₀/c) cos(kz - ωt) \hat{y}
+    E = E0 * np.cos(k * x - omega * t)  # Magnitude along \hat{x}
+    B = (E0 / c) * np.cos(k * x - omega * t)  # Magnitude along \hat{y}
+    
+    # Update wavefunction plot
+    line_real.set_data(x, real_psi)
+    line_imag.set_data(x, imag_psi)
+    
+    # Update EM wave plot
+    line_E.set_data(x, E)
+    line_B.set_data(x, B)
+    
+    return line_real, line_imag, line_E, line_B
+
+# Create animation
+ani = FuncAnimation(fig, animate, init_func=init, frames=np.linspace(0, 2*np.pi, 100), 
+                    interval=50, blit=True)
+
+# Display animation in Colab with looping
+plt.tight_layout()
+HTML(ani.to_jshtml(fps=20, default_mode='loop'))
