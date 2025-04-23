@@ -1,0 +1,63 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from IPython.display import HTML
+
+# Basic quantum configuration
+hbar = 1.0
+state_energies = [5.0, 6.5, 8.0]  # energy levels
+x = np.linspace(-5, 5, 500)
+
+# Spatial wavefunctions (Hermite-like)
+phi0 = np.exp(-x**2 / 2)
+phi1 = x * np.exp(-x**2 / 2)
+phi2 = (x**2 - 1) * np.exp(-x**2 / 2)
+basis = [phi / np.linalg.norm(phi) for phi in [phi0, phi1, phi2]]
+
+def wavefunction(t, decoherence=True):
+    psi = np.zeros_like(x, dtype=complex)
+    N = len(state_energies)
+    for n in range(N):
+        phase = np.exp(-1j * state_energies[n] * t / hbar)
+        decay = np.exp(-0.02 * n * t) if decoherence else 1
+        psi += (decay * phase) * basis[n]
+    return psi / np.sqrt(N)
+
+def dipole_expectation(psi):
+    return np.real(np.sum(np.conj(psi) * x * psi))
+
+# Animation setup
+fig, axs = plt.subplots(2, 1, figsize=(10, 6))
+line_psi, = axs[0].plot([], [], lw=2)
+line_dipole, = axs[1].plot([], [], lw=2, color='orange')
+axs[0].set_xlim(-5, 5)
+axs[0].set_ylim(0, 0.5)
+axs[0].set_title('|ψ(x, t)|²')
+
+axs[1].set_xlim(0, 20)
+axs[1].set_ylim(-0.5, 0.5)
+axs[1].set_title('Dipole ⟨x(t)⟩ ~ emitted radiation')
+
+dipoles = []
+times = []
+
+def init():
+    line_psi.set_data([], [])
+    line_dipole.set_data([], [])
+    return line_psi, line_dipole
+
+def animate(i):
+    t = i * 0.1
+    psi_t = wavefunction(t)
+    prob = np.abs(psi_t)**2
+    dip = dipole_expectation(psi_t)
+    dipoles.append(dip)
+    times.append(t)
+
+    line_psi.set_data(x, prob)
+    line_dipole.set_data(times, dipoles)
+    return line_psi, line_dipole
+
+ani = FuncAnimation(fig, animate, init_func=init, frames=200, interval=40, blit=True)
+plt.tight_layout()
+HTML(ani.to_jshtml())
