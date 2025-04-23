@@ -1,0 +1,65 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from IPython.display import HTML
+
+# Parameters
+k = 2.0  # Wave number
+omega = 1.0  # Angular frequency
+x = np.linspace(0, 4*np.pi, 1000)  # Spatial coordinate
+x_fixed = 0.0  # Fixed point for polar plot (x = 0)
+
+# Set up figure with two subplots  (adjusted for clarity)
+fig = plt.figure(figsize=(12, 5))
+
+# Left subplot: Real part of wavefunction
+ax1 = plt.subplot(121)
+line_real, = ax1.plot([], [], label='Real part: cos(kx - ωt)', color='blue')
+ax1.set_xlim(0, 4*np.pi)
+ax1.set_ylim(-1.5, 1.5)
+ax1.set_xlabel('x')
+ax1.set_ylabel('Real(ψ)')
+ax1.set_title('Real Component of Plane Wave')
+ax1.legend()
+ax1.grid(True)
+
+# Right subplot: Polar plot of wavefunction at x_fixed
+ax2 = plt.subplot(122, projection='polar')
+ax2.set_rlim(0, 1.5)
+ax2.set_rticks([0.5, 1.0])  # Radial ticks
+ax2.set_rlabel_position(90)
+ax2.set_title(f'Wavefunction at x = {x_fixed} in Complex Plane')
+point, = ax2.plot([], [], 'ro', label='ψ(x=0, t)')
+ax2.legend(loc='upper right')
+
+# Initialization function for animation
+def init():
+    line_real.set_data([], [])
+    point.set_data([], [])
+    return line_real, point
+
+# Animation function
+def animate(t):
+    # Wavefunction: ψ(x, t) = e^{i(kx - ωt)}
+    psi = np.exp(1j * (k * x - omega * t))
+    
+    # Update real part for left plot
+    line_real.set_data(x, np.real(psi))
+    
+    # Wavefunction at fixed point x_fixed
+    psi_fixed = np.exp(1j * (k * x_fixed - omega * t))
+    theta = np.angle(psi_fixed)  # Phase angle
+    r = np.abs(psi_fixed)  # Magnitude (should be 1)
+    
+    # Update polar plot (theta, r)
+    point.set_data([theta], [r])
+    
+    return line_real, point
+
+# Create animation
+ani = FuncAnimation(fig, animate, init_func=init, frames=np.linspace(0, 2*np.pi, 100), 
+                    interval=50, blit=True)
+
+# Display animation in Colab with looping
+plt.tight_layout()
+HTML(ani.to_jshtml(fps=20, default_mode='loop'))
