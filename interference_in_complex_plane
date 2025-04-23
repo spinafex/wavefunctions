@@ -1,0 +1,70 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from IPython.display import HTML
+
+# Parameters
+k1 = 2.0  # Wave number for psi1
+k2 = 2.2  # Slightly different wave number for psi2
+omega = 1.0  # Angular frequency
+x = np.linspace(0, 4*np.pi, 1000)  # Spatial coordinate
+x_fixed = 0.0  # Fixed point for polar plot
+
+# Set up figure with two subplots
+fig = plt.figure(figsize=(12, 5))
+
+# Left subplot: Real part of wavefunction sum
+ax1 = plt.subplot(121)
+line_sum, = ax1.plot([], [], label='Real(ψ₁ + ψ₂)', color='black')
+ax1.set_xlim(0, 4*np.pi)
+ax1.set_ylim(-2.5, 2.5)
+ax1.set_xlabel('x')
+ax1.set_ylabel('Real(ψ₁ + ψ₂)')
+ax1.set_title('Interference: Real Part of Wavefunction Sum')
+ax1.legend()
+ax1.grid(True)
+
+# Right subplot: Polar plot of wavefunction sum at x_fixed
+ax2 = plt.subplot(122, projection='polar')
+ax2.set_rlim(0, 2.5)
+ax2.set_rticks([0.5, 1.0, 1.5, 2.0])
+ax2.set_rlabel_position(90)
+ax2.set_title(f'Wavefunction Sum at x = {x_fixed} in Complex Plane')
+point, = ax2.plot([], [], 'ro', label='ψ₁ + ψ₂')
+ax2.legend(loc='upper right')
+
+# Initialization function
+def init():
+    line_sum.set_data([], [])
+    point.set_data([], [])
+    return line_sum, point
+
+# Animation function
+def animate(t):
+    # Wavefunctions: ψ₁ = e^{i(k₁x - ωt)}, ψ₂ = e^{i(k₂x - ωt)}
+    psi1 = np.exp(1j * (k1 * x - omega * t))
+    psi2 = np.exp(1j * (k2 * x - omega * t))
+    psi_sum = psi1 + psi2
+    
+    # Update real part of sum for left plot
+    line_sum.set_data(x, np.real(psi_sum))
+    
+    # Wavefunction sum at x_fixed
+    psi1_fixed = np.exp(1j * (k1 * x_fixed - omega * t))
+    psi2_fixed = np.exp(1j * (k2 * x_fixed - omega * t))
+    psi_sum_fixed = psi1_fixed + psi2_fixed
+    theta = np.angle(psi_sum_fixed)  # Phase angle
+    r = np.abs(psi_sum_fixed)  # Magnitude
+    
+    # Update polar plot
+    point.set_data([theta], [r])
+    
+    return line_sum, point
+
+# Create animation
+ani = FuncAnimation(fig, animate, init_func=init, frames=np.linspace(0, 2*np.pi, 100), 
+                    interval=50, blit=True)
+
+# Display animation in Colab with looping
+plt.tight_layout()
+HTML(ani.to_jshtml(fps=20, default_mode='loop'))
