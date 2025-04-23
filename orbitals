@@ -1,0 +1,90 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from IPython.display import HTML
+
+# Physical constants
+h = 4.1356677e-15  # Planck's constant (eV·s)
+hbar = h / (2 * np.pi)  # Reduced Planck's constant (eV·s)
+c = 3e8  # Speed of light (m/s)
+eV_to_J = 1.60218e-19  # Conversion from eV to Joules
+
+# Hydrogen energy levels
+def energy_level(n):
+    return -13.6 / n**2  # Energy in eV
+
+# States for transition (Balmer series, n2=3 to n1=2, H-alpha line)
+n1 = 1
+n2 = 2
+E1 = energy_level(n1)  # Energy of lower state (eV)
+E2 = energy_level(n2)  # Energy of higher state (eV)
+delta_E = E2 - E1  # Energy difference (eV)
+nu = delta_E / h  # Photon frequency (Hz)
+lambda_nm = c / nu * 1e9  # Wavelength (nm)
+
+# Phase accumulation frequencies
+omega1 = E1 / hbar  # Angular frequency for state n1 (rad/s)
+omega2 = E2 / hbar  # Angular frequency for state n2 (rad/s)
+
+# Time array for animation
+t_max = 2 * np.pi / abs(omega2 - omega1)  # One period of relative phase
+t = np.linspace(0, t_max, 100)
+
+# Set up figure with three subplots
+fig = plt.figure(figsize=(15, 5))
+
+# Subplot 1: Polar plot for state n1
+ax1 = plt.subplot(131, projection='polar')
+ax1.set_rlim(0, 1.5)
+ax1.set_rticks([0.5, 1.0])
+ax1.set_rlabel_position(90)
+ax1.set_title(f'State n={n1}, E={E1:.2f} eV')
+point1, = ax1.plot([], [], 'bo', label=f'Phase n={n1}')
+ax1.legend(loc='upper right')
+
+# Subplot 2: Polar plot for state n2
+ax2 = plt.subplot(132, projection='polar')
+ax2.set_rlim(0, 1.5)
+ax2.set_rticks([0.5, 1.0])
+ax2.set_rlabel_position(90)
+ax2.set_title(f'State n={n2}, E={E2:.2f} eV')
+point2, = ax2.plot([], [], 'ro', label=f'Phase n={n2}')
+ax2.legend(loc='upper right')
+
+# Subplot 3: Spectral line (static plot of wavelength)
+ax3 = plt.subplot(133)
+ax3.axvline(lambda_nm, color='purple', label=f'λ={lambda_nm:.1f} nm\nν={nu/1e14:.2f}×10¹⁴ Hz')
+ax3.set_xlim(lambda_nm - 50, lambda_nm + 50)
+ax3.set_ylim(0, 1)
+ax3.set_xlabel('Wavelength (nm)')
+ax3.set_ylabel('Intensity (arb. units)')
+ax3.set_title(f'Spectral Line (n={n2} → n={n1})')
+ax3.legend()
+ax3.grid(True)
+
+# Initialization function
+def init():
+    point1.set_data([], [])
+    point2.set_data([], [])
+    return point1, point2
+
+# Animation function
+def animate(t):
+    # Phase for state n1
+    phase1 = -E1 * t / hbar  # Phase = -E_n t / ħ
+    r1 = 1.0  # Magnitude = 1 for normalized state
+    point1.set_data([phase1], [r1])
+    
+    # Phase for state n2
+    phase2 = -E2 * t / hbar
+    r2 = 1.0
+    point2.set_data([phase2], [r2])
+    
+    return point1, point2
+
+# Create animation
+ani = FuncAnimation(fig, animate, init_func=init, frames=t, interval=50, blit=True)
+
+# Display animation in Colab with looping
+plt.tight_layout()
+HTML(ani.to_jshtml(fps=20, default_mode='loop'))
