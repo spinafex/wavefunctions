@@ -1,0 +1,67 @@
+# 📦 Install necessary packages
+!pip install --quiet matplotlib numpy
+
+# 🧮 Imports
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from IPython.display import HTML
+
+# 📐 Constants
+L = 1.0          # Length of the 1D box
+hbar = 1.0       # Set hbar = 1
+m = 1.0          # Set mass = 1
+N = 1000         # Spatial resolution
+x = np.linspace(0, L, N)
+dx = x[1] - x[0]
+
+# 🎵 Energy eigenstates for infinite square well
+def psi_n(n, x):
+    return np.sqrt(2/L) * np.sin(n * np.pi * x / L)
+
+def E_n(n):
+    return (n**2 * np.pi**2 * hbar**2) / (2 * m * L**2)
+
+# 🎛️ Superposition setup
+n_states = [1, 3] #2, 3]                      # Energy levels to include
+amplitudes = [1.0, 0.8, 0.6]             # Coefficients (real)
+phases = [0.0, 0.0, 0.0]                 # Initial phases
+
+# Option: simulate decoherence
+simulate_decoherence = True
+
+# 📈 Initialize wavefunction
+def psi_total(t):
+    psi = np.zeros_like(x, dtype=complex)
+    for n, a, phi in zip(n_states, amplitudes, phases):
+        En = E_n(n)
+        psi += a * psi_n(n, x) * np.exp(-1j * En * t / hbar + 1j * phi)
+    if simulate_decoherence:
+        psi *= np.exp(-0.1 * t)  # simulate exponential damping
+    return psi
+
+# 🎞️ Animation
+fig, ax = plt.subplots(figsize=(8, 4))
+line1, = ax.plot([], [], lw=2, label='|ψ(x,t)|²')
+ax.set_xlim(0, L)
+ax.set_ylim(0, 5)
+ax.set_xlabel("Position x")
+ax.set_ylabel("Probability Density")
+ax.set_title("Time Evolution of |ψ(x,t)|²")
+ax.legend()
+
+def init():
+    line1.set_data([], [])
+    return line1,
+
+def animate(i):
+    t = i * 0.05
+    psi = psi_total(t)
+    prob_density = np.abs(psi)**2
+    line1.set_data(x, prob_density)
+    return line1,
+
+anim = FuncAnimation(fig, animate, init_func=init,
+                     frames=60, interval=50, blit=True)
+
+HTML(anim.to_jshtml())
