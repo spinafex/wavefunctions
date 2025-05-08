@@ -1,0 +1,62 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the range for the parameter t
+t = np.linspace(-10, 10, 1000)
+
+# 1. Linear function: f(t) = t
+def linear_function(t):
+    return t
+
+# 2. Quadratic function: f(t) = t^2
+def quadratic_function(t):
+    return t**2
+
+# 3. Cubic function: f(t) = t^3
+def cubic_function(t):
+    return t**3
+
+# 4. Exponential function: f(t) = exp(t)
+def exponential_function(t):
+    return np.exp(t)
+
+# 5. Sinusoidal function: f(t) = sin(t)  (Interesting case: composition)
+def sinusoidal_function(t):
+    return np.sin(t)
+
+# 6.  A more complex function (combination of polynomial and sine)
+def complex_function(t):
+    return 0.1 * t**3 + np.sin(2*t) + t
+
+# Create a figure with multiple subplots
+plt.figure(figsize=(12, 18))  # Increased figure size for better spacing
+
+# Plotting function to reduce repetition
+def plot_sin_cos(func, func_name, subplot_num):
+    """
+    Plots sin(func(t)) vs cos(func(t)) and adds title and labels.
+
+    Args:
+        func: The function f(t)
+        func_name: Name of the function for the title
+        subplot_num: Subplot number (1, 2, 3...)
+    """
+    plt.subplot(3, 2, subplot_num) # 3 rows, 2 columns
+    plt.plot(np.cos(func(t)), np.sin(func(t)), label=f'sin(f(t)) vs cos(f(t))')
+    plt.xlabel('cos(f(t))')
+    plt.ylabel('sin(f(t))')
+    plt.title(f'{func_name}: sin(f(t)) vs cos(f(t))')
+    plt.legend()
+    plt.grid(True)
+    plt.gca().set_aspect('equal', adjustable='box') # Ensure equal aspect ratio
+
+# Plot the sine and cosine of each function
+plot_sin_cos(linear_function, "Linear", 1)
+plot_sin_cos(quadratic_function, "Quadratic", 2)
+plot_sin_cos(cubic_function, "Cubic", 3)
+plot_sin_cos(exponential_function, "Exponential", 4)
+plot_sin_cos(sinusoidal_function, "Sinusoidal", 5) # Sine of Sine
+plot_sin_cos(complex_function, "Complex", 6)
+
+plt.tight_layout()  # Adjust layout to prevent overlapping
+plt.show()
