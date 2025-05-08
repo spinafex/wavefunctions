@@ -1,0 +1,83 @@
+# Run this in Google Colab
+!pip install --quiet imageio[ffmpeg]
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from scipy.fft import fftshift, fft, fftfreq
+from IPython.display import HTML
+
+# Physical constants
+λ = 1.0                # Wavelength in arbitrary units
+k = 2 * np.pi / λ      # Wavenumber
+slit_width = 4 * λ     # Width of slit
+N = 2048               # Number of spatial samples
+x_range = 5 * λ       # Extent of x-axis in real space
+x = np.linspace(-x_range/2, x_range/2, N)
+dx = x[1] - x[0]
+
+# Slit aperture function: rectangular slit
+aperture = np.where(np.abs(x) <= slit_width/2, 1.0, 0.0)
+
+# Distance range for animation (from near to far field)
+z_vals = np.linspace(λ, 200 * λ, 100)
+
+# Precompute FFT of aperture for Fraunhofer
+fraunhofer_fft = fftshift(fft(aperture))
+
+# Storage for animation frames
+fig, ax = plt.subplots(figsize=(10, 4))
+line1, = ax.plot([], [], label='Rayleigh-Sommerfeld', lw=1.5)
+line2, = ax.plot([], [], label='Fresnel (paraxial)', lw=1.5)
+line3, = ax.plot([], [], label='Fraunhofer (far-field)', lw=1.5)
+ax.set_xlim(-50, 50)
+ax.set_ylim(0, 1.1)
+ax.set_title('Diffraction Pattern at Varying Distances')
+ax.set_xlabel('x [λ]')
+ax.set_ylabel('Normalized Intensity')
+ax.legend()
+text_z = ax.text(0.7, 0.9, '', transform=ax.transAxes)
+
+# Rayleigh-Sommerfeld diffraction
+def rayleigh_sommerfeld(u0, x, z):
+    U = np.zeros_like(x, dtype=complex)
+    for i, xi in enumerate(x):
+        r = np.sqrt((xi - x[:, None])**2 + z**2)
+        kernel = np.exp(1j * k * r) / r
+        U[i] = np.sum(u0[:, None] * kernel) * dx
+    return np.abs(U)**2 / np.max(np.abs(U)**2)
+
+# Fresnel (paraxial) approximation
+def fresnel_diffraction(u0, x, z):
+    X1, X2 = np.meshgrid(x, x)
+    r = X2 - X1
+    kernel = np.exp(1j * k * r**2 / (2 * z))
+    U = np.exp(1j * k * z) / (1j * λ * z) * np.dot(kernel, u0) * dx
+    return np.abs(U)**2 / np.max(np.abs(U)**2)
+
+# Fraunhofer approximation
+def fraunhofer_diffraction(u0, x, z):
+    fx = fftshift(fftfreq(N, dx))
+    angle = fx * λ
+    intensity = np.abs(fraunhofer_fft)**2
+    intensity /= np.max(intensity)
+    x_far = angle * z
+    return np.interp(x, x_far, intensity)
+
+# Animation update function
+def update(frame):
+    z = z_vals[frame]
+    I_rs = rayleigh_sommerfeld(aperture, x, z)
+    I_fresnel = fresnel_diffraction(aperture, x, z)
+    I_fraunhofer = fraunhofer_diffraction(aperture, x, z)
+
+    line1.set_data(x / λ, I_rs)
+    line2.set_data(x / λ, I_fresnel)
+    line3.set_data(x / λ, I_fraunhofer)
+    text_z.set_text(f'z = {z/λ:.1f} λ')
+    return line1, line2, line3, text_z
+
+ani = FuncAnimation(fig, update, frames=len(z_vals), blit=True, interval=100)
+
+# Display animation in notebook
+HTML(ani.to_jshtml())
