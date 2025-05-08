@@ -1,0 +1,67 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+def normalize(v):
+    return v / np.linalg.norm(v)
+
+def quaternion_from_axis_angle(axis, angle_rad):
+    axis = normalize(axis)
+    w = np.cos(angle_rad / 2)
+    xyz = axis * np.sin(angle_rad / 2)
+    return np.concatenate(([w], xyz))
+
+def quaternion_multiply(q1, q2):
+    w1, x1, y1, z1 = q1
+    w2, x2, y2, z2 = q2
+    return np.array([
+        w1*w2 - x1*x2 - y1*y2 - z1*z2,
+        w1*x2 + x1*w2 + y1*z2 - z1*y2,
+        w1*y2 - x1*z2 + y1*w2 + z1*x2,
+        w1*z2 + x1*y2 - y1*x2 + z1*w2
+    ])
+
+def quaternion_rotate_vector(q, v):
+    q_conj = np.array([q[0], -q[1], -q[2], -q[3]])
+    v_quat = np.concatenate(([0], v))
+    return quaternion_multiply(quaternion_multiply(q, v_quat), q_conj)[1:]
+
+# Set up rotation axis and original vector
+axis = np.array([0, 1, 0])  # rotate around Y-axis
+v = np.array([1, 0, 0])     # start at X-axis
+
+# Store rotated vectors
+rotated_vectors = []
+
+angles = np.linspace(0, 2*np.pi, 100)
+for angle in angles:
+    q = quaternion_from_axis_angle(axis, angle)
+    rotated_v = quaternion_rotate_vector(q, v)
+    rotated_vectors.append(rotated_v)
+
+rotated_vectors = np.array(rotated_vectors)
+
+# Plot the result
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# Plot unit sphere wireframe
+u, v_sphere = np.mgrid[0:2*np.pi:30j, 0:np.pi:15j]
+x = np.cos(u) * np.sin(v_sphere)
+y = np.sin(u) * np.sin(v_sphere)
+z = np.cos(v_sphere)
+ax.plot_wireframe(x, y, z, color="lightgray", alpha=0.3)
+
+# Plot vector path
+ax.plot(rotated_vectors[:,0], rotated_vectors[:,1], rotated_vectors[:,2], color='blue', label='Rotated vector tip path')
+
+# Plot initial vector
+ax.quiver(0, 0, 0, 1, 0, 0, color='red', label='Initial Vector')
+ax.quiver(0, 0, 0, *axis, color='green', label='Rotation Axis (Y)')
+
+ax.set_title('Quaternion Rotation on a Sphere')
+ax.set_xlim([-1.1, 1.1])
+ax.set_ylim([-1.1, 1.1])
+ax.set_zlim([-1.1, 1.1])
+ax.legend()
+plt.show()
