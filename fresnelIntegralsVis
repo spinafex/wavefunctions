@@ -1,0 +1,58 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.special import fresnel
+
+# Define the range for the parameter t
+t = np.linspace(-5, 5, 500)
+
+# Calculate the Fresnel integrals
+C, S = fresnel(t)
+
+# Plot the Fresnel integrals
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(t, C, label='C(t)')
+plt.plot(t, S, label='S(t)')
+plt.xlabel('t')
+plt.ylabel('Amplitude')
+plt.title('Fresnel Integrals')
+plt.legend()
+plt.grid(True)
+
+# Plot the Cornu spiral
+plt.subplot(1, 2, 2)
+plt.plot(C, S, label='Cornu Spiral')
+plt.xlabel('C(t)')
+plt.ylabel('S(t)')
+plt.title('Cornu Spiral')
+plt.axhline(0.5, color='r', linestyle='--', linewidth=0.5)  # Asymptote for S(t)
+plt.axvline(0.5, color='r', linestyle='--', linewidth=0.5)  # Asymptote for C(t)
+plt.axhline(-0.5, color='r', linestyle='--', linewidth=0.5) # Asymptote for S(t)
+plt.axvline(-0.5, color='r', linestyle='--', linewidth=0.5) # Asymptote for C(t)
+
+plt.annotate(r'($\frac{1}{2}$, $\frac{1}{2}$)', xy=(0.5, 0.5), xytext=(0.6, 0.6),
+            arrowprops=dict(facecolor='black', shrink=0.05),
+            )
+plt.annotate(r'($-\frac{1}{2}$, $-\frac{1}{2}$)', xy=(-0.5, -0.5), xytext=(-0.6, -0.6),
+            arrowprops=dict(facecolor='black', shrink=0.05),
+            )
+
+
+plt.grid(True)
+plt.gca().set_aspect('equal', adjustable='box') # Ensure the axes are scaled equally
+
+plt.tight_layout()
+plt.show()
+
+# Explanation:
+# 1. We import necessary libraries: numpy for numerical calculations, matplotlib for plotting, and scipy.special for the fresnel function.
+# 2. We define a range of t values using np.linspace. This will be the parameter for the Fresnel integrals.
+# 3. We calculate the Fresnel integrals C(t) and S(t) using scipy.special.fresnel.
+# 4. We create two subplots: one for the Fresnel integrals C(t) and S(t) as functions of t, and another for the Cornu spiral, which plots S(t) against C(t).
+# 5. We plot the Fresnel integrals in the first subplot.
+# 6. We plot the Cornu spiral in the second subplot. The asymptotes are added to show the limiting behavior of the spiral.
+# 7. We add labels, titles, and a grid to both subplots for clarity.
+# 8. plt.gca().set_aspect('equal', adjustable='box') is used to ensure the Cornu spiral is plotted correctly, with equal scaling of the x and y axes.
+# 9. plt.tight_layout() adjusts the subplots to fit into the figure area.
+# 10. plt.show() displays the plot.
